@@ -5,6 +5,8 @@ from sqlalchemy import create_engine
 
 
 def get_url():
+    return "sqlite:///sqlite.db"
+
     load_dotenv()
     user = os.getenv("DATABASE_USER", "change_this")
     password = os.getenv("DATABASE_PASSWORD", 'change_this')

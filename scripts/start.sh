@@ -31,9 +31,19 @@ else
     echo "There is no script $PRE_START_PATH"
 fi
 
-# Start Gunicorn
-#exec gunicorn -k "$WORKER_CLASS" -c "$GUNICORN_CONF" "$APP_MODULE" -w 4
-#exec ./venv/bin/gunicorn -k "$WORKER_CLASS" -c "$GUNICORN_CONF" "$APP_MODULE"
-exec poetry run gunicorn -k "$WORKER_CLASS" -c "$GUNICORN_CONF" "$APP_MODULE" -w 4
+if ! command -v "poetry" > /dev/null; then
+  if [ -f ./.venv/bin/python ]; then
+      DEFAULT_PYTHON_VENV_PATH=./.venv/bin
+  else [ -f ./venv/bin/python ];
+      DEFAULT_PYTHON_VENV_PATH=./venv/bin
+  fi
+  PYTHON_VENV_PATH=${DEFAULT_PYTHON_VENV_PATH:-$DEFAULT_PYTHON_VENV_PATH}
 
-# exec gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker
+  # Start Gunicorn
+  # $PYTHON_VENV_PATH/gunicorn -k "$WORKER_CLASS" -c "$GUNICORN_CONF" "$APP_MODULE" -w 4
+  $PYTHON_VENV_PATH/gunicorn  -c "$GUNICORN_CONF" "$APP_MODULE" -w 4
+
+else
+  # poetry run gunicorn -k "$WORKER_CLASS" -c "$GUNICORN_CONF" "$APP_MODULE" -w 4
+  poetry run gunicorn  -c "$GUNICORN_CONF" "$APP_MODULE" -w 4
+fi

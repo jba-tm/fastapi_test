@@ -22,4 +22,11 @@ class Base(PlainBase):
 
 
 class BtcUsdPrice(Base):
-    amount = sa.Column(sa.DECIMAL(asdecimal=True, precision=12, scale=2, ), nullable=False)
+    __tablename__ = 'btc_usd_price'
+    value = sa.Column(sa.DECIMAL(asdecimal=True, precision=12, scale=2, ), nullable=False)
+
+
+class Leads(Base):
+    phone_work = sa.Column(sa.String(255), nullable=True)
+    first_name = sa.Column(sa.String(255), nullable=True)
+    last_name = sa.Column(sa.String(255), nullable=True)
