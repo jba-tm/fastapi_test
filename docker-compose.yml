@@ -4,10 +4,8 @@ services:
   backend:
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
-    container_name: ${STACK_NAME?Variable not set}-backend
+    container_name: backend
     restart: on-failure
-    ports:
-      - "8000:8000"
     build:
       dockerfile: backend.dockerfile
     depends_on:
