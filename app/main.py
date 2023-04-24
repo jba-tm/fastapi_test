@@ -32,16 +32,18 @@ def get_application() -> FastAPI:
         allow_headers=["*"],
     )
 
-    @app.get('/leads/')
+    @application.get('/leads/')
     def get_leads(
+
             db: Session = Depends(get_db),
+            limit: Optional[int] = 20,
+            offset: Optional[int] = 0
     ):
         return db.execute(select(Leads).order_by('id').offset(offset).limit(limit)).scalars().fetchall()
 
-    @app.get('/leads/bulk-save/')
+    @application.get('/leads/bulk-save/')
     def bulk_save_leads(
             db: Session = Depends(get_db),
-
     ):
         data = [{"phone_work": '1234456', "first_name": 'xxxx', "last_name": 'zzzzzzz'}]
         objs_in = [
@@ -52,9 +54,9 @@ def get_application() -> FastAPI:
         # bulk save the models
         db.bulk_save_objects(objs_in)
         db.commit()
-    return True
+        return True
 
-    # @app.get('/')
+    # @application.get('/')
     # def home(
     #         db: Session = Depends(get_db),
     #         limit: Optional[int] = 20,
@@ -62,7 +64,7 @@ def get_application() -> FastAPI:
     # ):
     #     return db.execute(select(BtcUsdPrice).order_by('id').offset(offset).limit(limit)).scalars().fetchall()
 
-    # @app.get('/fetch/')
+    # @application.get('/fetch/')
     # def fetch_api(
     #         db: Session = Depends(get_db)
     # ):
