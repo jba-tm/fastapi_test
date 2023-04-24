@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  backend:
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    container_name: ${STACK_NAME?Variable not set}-backend
+    restart: on-failure
+
+    build:
+      dockerfile: backend.dockerfile
+    depends_on:
+      - db
+    env_file:
+      - .env
+  db:
+    image: mysql
+    # NOTE: use of "mysql_native_password" is not recommended: https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
+    # (this is just an example, not intended to be a production configuration)
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+      - "${DATABASE_PORT}:${DATABASE_PORT}"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD}
+      MYSQL_USER: ${DATABASE_USER}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+      MYSQL_DATABASE: ${DATABASE_NAME}
