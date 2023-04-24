@@ -47,7 +47,7 @@ def get_application() -> FastAPI:
     ):
         data = [{"phone_work": '1234456', "first_name": 'xxxx', "last_name": 'zzzzzzz'}]
         objs_in = [
-            Leads(phone_work=obj.get('phone_work'), first_name=obj.get('first_name'), last_name=obj.get('last_name') )
+            Leads(phone_work=obj.get('phone_work'), first_name=obj.get('first_name'), last_name=obj.get('last_name'))
             for obj in data
         ]
 
@@ -56,15 +56,30 @@ def get_application() -> FastAPI:
         db.commit()
         return True
 
-    # @application.get('/')
-    # def home(
-    #         db: Session = Depends(get_db),
-    #         limit: Optional[int] = 20,
-    #         offset: Optional[int] = 0
-    # ):
-    #     return db.execute(select(BtcUsdPrice).order_by('id').offset(offset).limit(limit)).scalars().fetchall()
+    @application.get('/btc-usd-price/')
+    def get_btc_usd_price(
+            db: Session = Depends(get_db),
+            limit: Optional[int] = 20,
+            offset: Optional[int] = 0
+    ):
+        return db.execute(select(BtcUsdPrice).order_by('id').offset(offset).limit(limit)).scalars().fetchall()
 
-    # @application.get('/fetch/')
+    @application.get('/btc-usd-price/')
+    def bulk_save_leads_btc_usd_price(
+            db: Session = Depends(get_db),
+    ):
+        data = [{"value": 12344}, {"value": 1324, }, {"value": 45}]
+        objs_in = [
+            BtcUsdPrice(value=obj.get('value'))
+            for obj in data
+        ]
+
+        # bulk save the models
+        db.bulk_save_objects(objs_in)
+        db.commit()
+        return True
+
+    # @application.get('/leads/fetch/')
     # def fetch_api(
     #         db: Session = Depends(get_db)
     # ):
@@ -88,12 +103,12 @@ def get_application() -> FastAPI:
     #         # Do something with the leads data
     #     else:
     #         raise HTTPException(status_code=400, detail='Error fetching leads: ' + response.text)
-    #     price = BtcUsdPrice(amount=leads_data.get('data').get('amount'))
-    #     db.add(price)
-    #     db.commit()
-    #     return price
-
-    return application
+    #     # price = BtcUsdPrice(amount=leads_data.get('data').get('amount'))
+    #     # db.add(price)
+    #     # db.commit()
+    #     # return price
+    #     return {}
+    # return application
 
 
 app = get_application()
