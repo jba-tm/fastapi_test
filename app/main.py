@@ -1,4 +1,6 @@
 import requests
+import json
+import hashlib
 from typing import Generator, Optional
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +21,7 @@ def get_db() -> Generator:
 def get_application() -> FastAPI:
     application = FastAPI(
         title='Fetch api',
-        debug=False,
+        debug=True,
         version='0.1.0',
     )
 
@@ -45,10 +47,63 @@ def get_application() -> FastAPI:
     def bulk_save_leads(
             db: Session = Depends(get_db),
     ):
-        data = [{"phone_work": '1234456', "first_name": 'xxxx', "last_name": 'zzzzzzz'}]
+        url = "https://suitecrmdemo.dtbc.eu/service/v4/rest.php"
+        payload = {
+            "method": "login",
+            "input_type": "JSON",
+            "response_type": "JSON",
+            "rest_data": json.dumps({
+                "user_auth": {
+                    "user_name": "Demo",
+                    # "password": "Demo"
+                    "password": hashlib.md5("Demo".encode()).hexdigest()
+                },
+                "application_name": "RestTest",
+                "name_value_list": []
+            })
+        }
+        response = requests.post(url, data=payload, verify=False)
+
+        if response.status_code == 200:
+            session_id = json.loads(response.text)['id']
+        else:
+            print(response.text)
+            raise HTTPException(status_code=response.status_code, detail='Auth error')
+
+        payload = {
+            'method': 'get_entry_list',
+            'input_type': 'JSON',
+            'response_type': 'JSON',
+            'rest_data': json.dumps({
+                'session': session_id,
+                'module_name': 'Leads',
+                'query': '',
+                'order_by': '',
+                'offset': '0',
+                'select_fields': [],
+                'link_name_to_fields_array': [],
+                'max_results': '1000',
+                'deleted': '0'
+            })
+        }
+
+        response = requests.post(url, data=payload)
+        if response.status_code == 200:
+            leads_data = response.json()['entry_list']
+            # for lead in leads_data:
+            #     print(lead)
+        else:
+            # print(response.json())
+            raise HTTPException(status_code=response.status_code, detail='Leads receive error')
+        # data = response.json()
+        # data = [{"phone_work": '1234456', "first_name": 'xxxx', "last_name": 'zzzzzzz'}]
         objs_in = [
-            Leads(phone_work=obj.get('phone_work'), first_name=obj.get('first_name'), last_name=obj.get('last_name'))
-            for obj in data
+            Leads(
+                phone_work=obj['name_value_list']['phone_work']['value'],
+                first_name=obj['name_value_list'].get('first_name').get('value'),
+                last_name=obj['name_value_list'].get('last_name').get('value')
+            )
+            for obj in leads_data
         ]
 
         # bulk save the models
@@ -108,7 +163,7 @@ def get_application() -> FastAPI:
     #     # db.commit()
     #     # return price
     #     return {}
-    # return application
+    return application
 
 
 app = get_application()
