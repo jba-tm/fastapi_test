@@ -119,18 +119,17 @@ def get_application() -> FastAPI:
     ):
         return db.execute(select(BtcUsdPrice).order_by('id').offset(offset).limit(limit)).scalars().fetchall()
 
-    @application.get('/btc-usd-price/')
+    @application.get('/btc-usd-price/bulk-save/')
     def bulk_save_leads_btc_usd_price(
             db: Session = Depends(get_db),
     ):
-        data = [{"value": 12344}, {"value": 1324, }, {"value": 45}]
-        objs_in = [
-            BtcUsdPrice(value=obj.get('value'))
-            for obj in data
-        ]
-
-        # bulk save the models
-        db.bulk_save_objects(objs_in)
+        url = "https://api.coinbase.com/v2/prices/BTC-USD/spot"
+        response = requests.get(url, headers={"Content-Type": "application/json"})
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail='BTC usd price fetch error')
+        result = response.json()
+        db_obj = BtcUsdPrice(value=result["data"]["amount"])
+        db.add(db_obj)
         db.commit()
         return True
 
